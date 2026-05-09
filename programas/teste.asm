@@ -1,7 +1,8 @@
 .code
 LOAD variable
-SUB #1
+loop: SUB #1
 SYSCALL 1
+BRPOS loop
 SYSCALL 0
 .endcode
 

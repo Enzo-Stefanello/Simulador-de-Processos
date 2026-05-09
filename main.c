@@ -2,38 +2,25 @@
 
 #include "processo.h"
 #include "parser.h"
+#include "cpu.h"
 
 int main() {
 
     Processo p;
 
+    p.pc = 0;
+    p.acc = 0;
+    p.estado = READY;
+
     carregarPrograma("programas/teste.asm", &p);
 
-    printf("Programa carregado!\n\n");
+    while(p.estado != FINISHED) {
 
-    printf("INSTRUCOES:\n\n");
+        executarInstrucao(&p);
 
-    for(int i = 0; i < p.total_instrucoes; i++) {
+        printf("ACC = %d\n", p.acc);
 
-        printf(
-            "%d -> %s %s\n",
-            i,
-            p.codigo[i].opcode,
-            p.codigo[i].operando
-        );
-    }
-
-    printf("\n");
-
-    printf("VARIAVEIS:\n\n");
-
-    for(int i = 0; i < p.total_variaveis; i++) {
-
-        printf(
-            "%s = %d\n",
-            p.memoria[i].nome,
-            p.memoria[i].valor
-        );
+        printf("\n");
     }
 
     return 0;

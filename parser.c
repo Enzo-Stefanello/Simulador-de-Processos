@@ -16,6 +16,7 @@ void carregarPrograma(char *arquivo, Processo *p) {
 
     p->total_instrucoes = 0;
     p->total_variaveis = 0;
+    p->total_labels = 0;
 
     while(fgets(linha, sizeof(linha), fp)) {
 
@@ -46,6 +47,34 @@ void carregarPrograma(char *arquivo, Processo *p) {
         }
 
         if(dentroCode) {
+
+            char labelNome[30];
+
+            if(strchr(linha, ':') != NULL) {
+
+                sscanf(linha, "%[^:]:", labelNome);
+
+                Label l;
+
+                strcpy(l.nome, labelNome);
+                l.linha = p->total_instrucoes;
+
+                p->labels[p->total_labels] = l;
+
+                p->total_labels++;
+
+                char *resto = strchr(linha, ':') + 1;
+
+                while(*resto == ' ') {
+                    resto++;
+                }
+
+                if(strlen(resto) == 0) {
+                    continue;
+                }
+
+                strcpy(linha, resto);
+            }
 
             Instrucao instrucao;
 
