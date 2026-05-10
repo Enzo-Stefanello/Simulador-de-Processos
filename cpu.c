@@ -1,3 +1,5 @@
+#include <time.h>
+
 #include "cpu.h"
 
 int buscarVariavel(Processo *p, char *nome) {
@@ -24,7 +26,7 @@ int buscarLabel(Processo *p, char *nome) {
     return -1;
 }
 
-void executarInstrucao(Processo *p) {
+void executarInstrucao(Processo *p, int tempo_global) {
 
     Instrucao atual = p->codigo[p->pc];
 
@@ -131,6 +133,17 @@ void executarInstrucao(Processo *p) {
         else if(syscall == 1) {
 
             printf("PRINT: %d\n", p->acc);
+
+            int bloqueio = (rand() % 3) + 1;
+
+            p->bloqueado_ate = tempo_global + bloqueio;
+
+            p->estado = BLOCKED;
+
+            printf(
+                "Processo bloqueado por %d tempos.\n",
+                bloqueio
+            );
         }
 
         p->pc++;

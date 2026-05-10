@@ -3,6 +3,6 @@
 
 #include "processo.h"
 
-void executarInstrucao(Processo *p);
+void executarInstrucao(Processo *p, int tempo_global);
 
 #endif

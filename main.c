@@ -1,11 +1,31 @@
 #include <stdio.h>
+#include <time.h>
 
 #include "processo.h"
 #include "parser.h"
 #include "cpu.h"
 #include "scheduler.h"
 
+void atualizarBloqueados(Processo processos[], int total, int tempo_global) {
+
+    for(int i = 0; i < total; i++) {
+
+        if(processos[i].estado == BLOCKED &&
+           tempo_global >= processos[i].bloqueado_ate) {
+
+            processos[i].estado = READY;
+
+            printf(
+                "\nProcesso %s desbloqueado.\n",
+                processos[i].nome
+            );
+        }
+    }
+}
+
 int main() {
+
+    srand(time(NULL));
 
     Processo processos[2];
 
@@ -35,10 +55,30 @@ int main() {
 
     while(1) {
 
+        atualizarBloqueados(processos, 2, tempo_global);
+
         Processo *atual = escolherProcesso(processos, 2);
 
         if(atual == NULL) {
-            break;
+
+            int ativos = 0;
+
+            for(int i = 0; i < 2; i++) {
+
+                if(processos[i].estado != FINISHED) {
+                    ativos = 1;
+                }
+            }
+
+            if(!ativos) {
+                break;
+            }
+
+            printf("\nTEMPO %d -> CPU OCIOSA\n", tempo_global);
+
+            tempo_global++;
+
+            continue;
         }
 
         atual->estado = RUNNING;
@@ -49,7 +89,7 @@ int main() {
         printf("DEADLINE: %d\n", atual->deadline);
         printf("========================\n");
 
-        executarInstrucao(atual);
+        executarInstrucao(atual, tempo_global);
 
         printf("ACC = %d\n", atual->acc);
 
