@@ -6,6 +6,7 @@
 #include <string.h>
 
 typedef enum {
+    NEW,
     READY,
     RUNNING,
     BLOCKED,

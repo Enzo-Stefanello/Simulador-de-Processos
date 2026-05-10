@@ -14,6 +14,19 @@ int buscarVariavel(Processo *p, char *nome) {
     return 0;
 }
 
+void alterarVariavel(Processo *p, char *nome, int valor) {
+
+    for(int i = 0; i < p->total_variaveis; i++) {
+
+        if(strcmp(p->memoria[i].nome, nome) == 0) {
+
+            p->memoria[i].valor = valor;
+
+            return;
+        }
+    }
+}
+
 int buscarLabel(Processo *p, char *nome) {
 
     for(int i = 0; i < p->total_labels; i++) {
@@ -50,6 +63,13 @@ void executarInstrucao(Processo *p, int tempo_global) {
         p->pc++;
     }
 
+    else if(strcmp(atual.opcode, "STORE") == 0) {
+
+        alterarVariavel(p, atual.operando, p->acc);
+
+        p->pc++;
+    }
+
     else if(strcmp(atual.opcode, "ADD") == 0) {
 
         if(atual.operando[0] == '#') {
@@ -73,6 +93,45 @@ void executarInstrucao(Processo *p, int tempo_global) {
         } else {
 
             p->acc -= buscarVariavel(p, atual.operando);
+        }
+
+        p->pc++;
+    }
+
+    else if(strcmp(atual.opcode, "MULT") == 0) {
+
+        if(atual.operando[0] == '#') {
+
+            p->acc *= atoi(&atual.operando[1]);
+
+        } else {
+
+            p->acc *= buscarVariavel(p, atual.operando);
+        }
+
+        p->pc++;
+    }
+
+    else if(strcmp(atual.opcode, "DIV") == 0) {
+
+        int divisor;
+
+        if(atual.operando[0] == '#') {
+
+            divisor = atoi(&atual.operando[1]);
+
+        } else {
+
+            divisor = buscarVariavel(p, atual.operando);
+        }
+
+        if(divisor != 0) {
+
+            p->acc /= divisor;
+
+        } else {
+
+            printf("Erro: divisao por zero.\n");
         }
 
         p->pc++;

@@ -23,6 +23,41 @@ void atualizarBloqueados(Processo processos[], int total, int tempo_global) {
     }
 }
 
+void atualizarChegadas(Processo processos[], int total, int tempo_global) {
+
+    for(int i = 0; i < total; i++) {
+
+        if(processos[i].estado == NEW &&
+           tempo_global >= processos[i].arrival_time) {
+
+            processos[i].estado = READY;
+
+            printf(
+                "\nProcesso %s chegou no sistema.\n",
+                processos[i].nome
+            );
+        }
+    }
+}
+
+void verificarDeadlines(Processo processos[], int total, int tempo_global) {
+
+    for(int i = 0; i < total; i++) {
+
+        if(processos[i].estado != FINISHED &&
+           tempo_global > processos[i].deadline) {
+
+            printf(
+                "\n[DEADLINE MISS] Processo %s perdeu o deadline no tempo %d\n",
+                processos[i].nome,
+                tempo_global
+            );
+
+            processos[i].deadline = 999999;
+        }
+    }
+}
+
 int main() {
 
     srand(time(NULL));
@@ -37,7 +72,7 @@ int main() {
 
     processos[0].pc = 0;
     processos[0].acc = 0;
-    processos[0].estado = READY;
+    processos[0].estado = NEW;
     processos[0].arrival_time = 0;
     processos[0].Ci = 4;
     processos[0].Pi = 10;
@@ -45,8 +80,8 @@ int main() {
 
     processos[1].pc = 0;
     processos[1].acc = 0;
-    processos[1].estado = READY;
-    processos[1].arrival_time = 0;
+    processos[1].estado = NEW;
+    processos[1].arrival_time = 4;
     processos[1].Ci = 3;
     processos[1].Pi = 5;
     processos[1].deadline = 5;
@@ -55,7 +90,11 @@ int main() {
 
     while(1) {
 
+        atualizarChegadas(processos, 2, tempo_global);
+
         atualizarBloqueados(processos, 2, tempo_global);
+
+        verificarDeadlines(processos, 2, tempo_global);
 
         Processo *atual = escolherProcesso(processos, 2);
 
