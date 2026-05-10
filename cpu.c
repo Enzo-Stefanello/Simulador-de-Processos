@@ -2,6 +2,7 @@
 
 #include "cpu.h"
 
+// Busca valor de variável na memória
 int buscarVariavel(Processo *p, char *nome) {
 
     for(int i = 0; i < p->total_variaveis; i++) {
@@ -14,6 +15,7 @@ int buscarVariavel(Processo *p, char *nome) {
     return 0;
 }
 
+// Altera valor de variável
 void alterarVariavel(Processo *p, char *nome, int valor) {
 
     for(int i = 0; i < p->total_variaveis; i++) {
@@ -27,6 +29,7 @@ void alterarVariavel(Processo *p, char *nome, int valor) {
     }
 }
 
+// Busca linha da label
 int buscarLabel(Processo *p, char *nome) {
 
     for(int i = 0; i < p->total_labels; i++) {
@@ -39,23 +42,32 @@ int buscarLabel(Processo *p, char *nome) {
     return -1;
 }
 
+// CPU virtual
+// Executa uma instrução por vez
 void executarInstrucao(Processo *p, int tempo_global) {
 
+    // Busca instrução atual usando PC
     Instrucao atual = p->codigo[p->pc];
 
+    // Mostra instrução executada
     printf(
         "Executando: %s %s\n",
         atual.opcode,
         atual.operando
     );
 
+    // LOAD -> carrega valor no ACC
     if(strcmp(atual.opcode, "LOAD") == 0) {
 
+        // Valor imediato
         if(atual.operando[0] == '#') {
 
             p->acc = atoi(&atual.operando[1]);
 
-        } else {
+        } 
+        
+        // Valor da memória
+        else {
 
             p->acc = buscarVariavel(p, atual.operando);
         }
@@ -63,6 +75,7 @@ void executarInstrucao(Processo *p, int tempo_global) {
         p->pc++;
     }
 
+    // STORE -> salva ACC na memória
     else if(strcmp(atual.opcode, "STORE") == 0) {
 
         alterarVariavel(p, atual.operando, p->acc);
@@ -70,6 +83,7 @@ void executarInstrucao(Processo *p, int tempo_global) {
         p->pc++;
     }
 
+    // ADD -> soma no ACC
     else if(strcmp(atual.opcode, "ADD") == 0) {
 
         if(atual.operando[0] == '#') {
@@ -84,6 +98,7 @@ void executarInstrucao(Processo *p, int tempo_global) {
         p->pc++;
     }
 
+    // SUB -> subtrai do ACC
     else if(strcmp(atual.opcode, "SUB") == 0) {
 
         if(atual.operando[0] == '#') {
@@ -98,6 +113,7 @@ void executarInstrucao(Processo *p, int tempo_global) {
         p->pc++;
     }
 
+    // MULT -> multiplica ACC
     else if(strcmp(atual.opcode, "MULT") == 0) {
 
         if(atual.operando[0] == '#') {
@@ -112,6 +128,7 @@ void executarInstrucao(Processo *p, int tempo_global) {
         p->pc++;
     }
 
+    // DIV -> divide ACC
     else if(strcmp(atual.opcode, "DIV") == 0) {
 
         int divisor;
@@ -125,6 +142,7 @@ void executarInstrucao(Processo *p, int tempo_global) {
             divisor = buscarVariavel(p, atual.operando);
         }
 
+        // Evita divisão por zero
         if(divisor != 0) {
 
             p->acc /= divisor;
@@ -137,11 +155,13 @@ void executarInstrucao(Processo *p, int tempo_global) {
         p->pc++;
     }
 
+    // BRANY -> salto direto
     else if(strcmp(atual.opcode, "BRANY") == 0) {
 
         p->pc = buscarLabel(p, atual.operando);
     }
 
+    // BRPOS -> salta se ACC > 0
     else if(strcmp(atual.opcode, "BRPOS") == 0) {
 
         if(p->acc > 0) {
@@ -154,6 +174,7 @@ void executarInstrucao(Processo *p, int tempo_global) {
         }
     }
 
+    // BRZERO -> salta se ACC == 0
     else if(strcmp(atual.opcode, "BRZERO") == 0) {
 
         if(p->acc == 0) {
@@ -166,6 +187,7 @@ void executarInstrucao(Processo *p, int tempo_global) {
         }
     }
 
+    // BRNEG -> salta se ACC < 0
     else if(strcmp(atual.opcode, "BRNEG") == 0) {
 
         if(p->acc < 0) {
@@ -178,10 +200,12 @@ void executarInstrucao(Processo *p, int tempo_global) {
         }
     }
 
+    // SYSCALL -> chamada de sistema
     else if(strcmp(atual.opcode, "SYSCALL") == 0) {
 
         int syscall = atoi(atual.operando);
 
+        // SYSCALL 0 -> encerra processo
         if(syscall == 0) {
 
             printf("Processo encerrado.\n");
@@ -189,10 +213,12 @@ void executarInstrucao(Processo *p, int tempo_global) {
             p->estado = FINISHED;
         }
 
+        // SYSCALL 1 -> imprime ACC
         else if(syscall == 1) {
 
             printf("PRINT: %d\n", p->acc);
 
+            // Gera bloqueio aleatório
             int bloqueio = (rand() % 3) + 1;
 
             p->bloqueado_ate = tempo_global + bloqueio;
@@ -205,6 +231,7 @@ void executarInstrucao(Processo *p, int tempo_global) {
             );
         }
 
+        // SYSCALL 2 -> entrada via teclado
         else if(syscall == 2) {
 
             int valor;
@@ -213,8 +240,10 @@ void executarInstrucao(Processo *p, int tempo_global) {
 
             scanf("%d", &valor);
 
+            // Salva entrada no ACC
             p->acc = valor;
 
+            // Gera bloqueio aleatório
             int bloqueio = (rand() % 3) + 1;
 
             p->bloqueado_ate = tempo_global + bloqueio;
@@ -227,6 +256,7 @@ void executarInstrucao(Processo *p, int tempo_global) {
             );
         }
 
+        // Próxima instrução
         p->pc++;
     }
 }

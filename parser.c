@@ -1,109 +1,144 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "parser.h"
 
+// Remove quebra de linha
+void removerQuebraLinha(char *str) {
+
+    str[strcspn(str, "\n")] = 0;
+}
+
+// Carrega programa assembly
 void carregarPrograma(char *arquivo, Processo *p) {
 
     FILE *fp = fopen(arquivo, "r");
 
+    // Verifica se abriu arquivo
     if(fp == NULL) {
-        printf("Erro ao abrir arquivo!\n");
-        return;
+
+        printf("Erro ao abrir arquivo %s\n", arquivo);
+
+        exit(1);
     }
 
     char linha[100];
 
-    int dentroCode = 0;
-    int dentroData = 0;
+    int emCodigo = 0;
+    int emDados = 0;
 
     p->total_instrucoes = 0;
     p->total_variaveis = 0;
     p->total_labels = 0;
 
+    // Lê arquivo linha por linha
     while(fgets(linha, sizeof(linha), fp)) {
 
-        linha[strcspn(linha, "\r\n")] = '\0';
+        removerQuebraLinha(linha);
 
+        // Ignora linha vazia
         if(strlen(linha) == 0) {
             continue;
         }
 
+        // Início da área de código
         if(strcmp(linha, ".code") == 0) {
-            dentroCode = 1;
+
+            emCodigo = 1;
+
             continue;
         }
 
+        // Final da área de código
         if(strcmp(linha, ".endcode") == 0) {
-            dentroCode = 0;
+
+            emCodigo = 0;
+
             continue;
         }
 
+        // Início da área de dados
         if(strcmp(linha, ".data") == 0) {
-            dentroData = 1;
+
+            emDados = 1;
+
             continue;
         }
 
+        // Final da área de dados
         if(strcmp(linha, ".enddata") == 0) {
-            dentroData = 0;
+
+            emDados = 0;
+
             continue;
         }
 
-        if(dentroCode) {
+        // Leitura das instruções
+        if(emCodigo) {
 
-            char labelNome[30];
+            char label[50];
+            char opcode[20];
+            char operando[20];
 
-            if(strchr(linha, ':') != NULL) {
+            // Verifica se possui label
+            if(strchr(linha, ':')) {
 
-                sscanf(linha, "%[^:]:", labelNome);
+                sscanf(
+                    linha,
+                    "%[^:]: %s %s",
+                    label,
+                    opcode,
+                    operando
+                );
 
-                Label l;
+                // Salva label
+                strcpy(
+                    p->labels[p->total_labels].nome,
+                    label
+                );
 
-                strcpy(l.nome, labelNome);
-                l.linha = p->total_instrucoes;
-
-                p->labels[p->total_labels] = l;
+                p->labels[p->total_labels].linha =
+                    p->total_instrucoes;
 
                 p->total_labels++;
 
-                char *resto = strchr(linha, ':') + 1;
+            } else {
 
-                while(*resto == ' ') {
-                    resto++;
-                }
-
-                if(strlen(resto) == 0) {
-                    continue;
-                }
-
-                strcpy(linha, resto);
+                // Linha sem label
+                sscanf(linha, "%s %s", opcode, operando);
             }
 
-            Instrucao instrucao;
-
-            strcpy(instrucao.operando, "");
-
-            sscanf(
-                linha,
-                "%s %s",
-                instrucao.opcode,
-                instrucao.operando
+            // Salva instrução
+            strcpy(
+                p->codigo[p->total_instrucoes].opcode,
+                opcode
             );
 
-            p->codigo[p->total_instrucoes] = instrucao;
+            strcpy(
+                p->codigo[p->total_instrucoes].operando,
+                operando
+            );
 
             p->total_instrucoes++;
         }
 
-        if(dentroData) {
+        // Leitura das variáveis
+        else if(emDados) {
 
-            Variavel var;
+            char nome[50];
+            int valor;
 
-            sscanf(
-                linha,
-                "%s %d",
-                var.nome,
-                &var.valor
+            sscanf(linha, "%s %d", nome, &valor);
+
+            // Salva variável na memória
+            strcpy(
+                p->memoria[p->total_variaveis].nome,
+                nome
             );
 
-            p->memoria[p->total_variaveis] = var;
+            p->memoria[p->total_variaveis].valor =
+                valor;
 
             p->total_variaveis++;
         }
