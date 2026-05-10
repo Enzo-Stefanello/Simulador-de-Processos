@@ -6,6 +6,36 @@
 #include "cpu.h"
 #include "scheduler.h"
 
+char* nomeEstado(Estado e) {
+
+    switch(e) {
+
+        case NEW: return "NEW";
+        case READY: return "READY";
+        case RUNNING: return "RUNNING";
+        case BLOCKED: return "BLOCKED";
+        case FINISHED: return "FINISHED";
+    }
+
+    return "";
+}
+
+void mostrarEstados(Processo processos[], int total) {
+
+    printf("\nESTADOS:\n");
+
+    for(int i = 0; i < total; i++) {
+
+        printf(
+            "%s -> %s\n",
+            processos[i].nome,
+            nomeEstado(processos[i].estado)
+        );
+    }
+
+    printf("\n");
+}
+
 void atualizarBloqueados(Processo processos[], int total, int tempo_global) {
 
     for(int i = 0; i < total; i++) {
@@ -45,6 +75,7 @@ void verificarDeadlines(Processo processos[], int total, int tempo_global) {
     for(int i = 0; i < total; i++) {
 
         if(processos[i].estado != FINISHED &&
+           processos[i].perdeu_deadline == 0 &&
            tempo_global > processos[i].deadline) {
 
             printf(
@@ -53,7 +84,36 @@ void verificarDeadlines(Processo processos[], int total, int tempo_global) {
                 tempo_global
             );
 
-            processos[i].deadline = 999999;
+            processos[i].perdeu_deadline = 1;
+        }
+    }
+}
+
+void renovarPeriodicos(Processo processos[], int total, int tempo_global) {
+
+    for(int i = 0; i < total; i++) {
+
+        if(processos[i].estado == FINISHED) {
+
+            if(tempo_global >= processos[i].arrival_time + processos[i].Pi) {
+
+                printf(
+                    "\n[TAREFA PERIODICA] %s reiniciada.\n",
+                    processos[i].nome
+                );
+
+                processos[i].pc = 0;
+                processos[i].acc = 0;
+
+                processos[i].estado = READY;
+
+                processos[i].arrival_time = tempo_global;
+
+                processos[i].deadline =
+                    tempo_global + processos[i].Pi;
+
+                processos[i].perdeu_deadline = 0;
+            }
         }
     }
 }
@@ -77,6 +137,7 @@ int main() {
     processos[0].Ci = 4;
     processos[0].Pi = 10;
     processos[0].deadline = 10;
+    processos[0].perdeu_deadline = 0;
 
     processos[1].pc = 0;
     processos[1].acc = 0;
@@ -85,10 +146,15 @@ int main() {
     processos[1].Ci = 3;
     processos[1].Pi = 5;
     processos[1].deadline = 5;
+    processos[1].perdeu_deadline = 0;
 
     int tempo_global = 0;
 
-    while(1) {
+    Processo *processo_anterior = NULL;
+
+    Estado estado_anterior = READY;
+
+    while(tempo_global < 40) {
 
         atualizarChegadas(processos, 2, tempo_global);
 
@@ -96,28 +162,30 @@ int main() {
 
         verificarDeadlines(processos, 2, tempo_global);
 
+        renovarPeriodicos(processos, 2, tempo_global);
+
+        mostrarEstados(processos, 2);
+
         Processo *atual = escolherProcesso(processos, 2);
 
         if(atual == NULL) {
-
-            int ativos = 0;
-
-            for(int i = 0; i < 2; i++) {
-
-                if(processos[i].estado != FINISHED) {
-                    ativos = 1;
-                }
-            }
-
-            if(!ativos) {
-                break;
-            }
 
             printf("\nTEMPO %d -> CPU OCIOSA\n", tempo_global);
 
             tempo_global++;
 
             continue;
+        }
+
+        if(processo_anterior != NULL &&
+           processo_anterior != atual &&
+           estado_anterior == RUNNING) {
+
+            printf(
+                "\n[PREEMPCAO] %s interrompido -> %s assumiu CPU\n",
+                processo_anterior->nome,
+                atual->nome
+            );
         }
 
         atual->estado = RUNNING;
@@ -132,14 +200,18 @@ int main() {
 
         printf("ACC = %d\n", atual->acc);
 
+        estado_anterior = atual->estado;
+
         if(atual->estado == RUNNING) {
             atual->estado = READY;
         }
 
+        processo_anterior = atual;
+
         tempo_global++;
     }
 
-    printf("\nTodos os processos finalizaram.\n");
+    printf("\nSimulacao encerrada.\n");
 
     return 0;
 }

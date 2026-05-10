@@ -44,6 +44,8 @@ typedef struct {
 
     int deadline;
 
+    int perdeu_deadline;
+
     int tempo_executado;
 
     int bloqueado_ate;

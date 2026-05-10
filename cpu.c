@@ -205,6 +205,28 @@ void executarInstrucao(Processo *p, int tempo_global) {
             );
         }
 
+        else if(syscall == 2) {
+
+            int valor;
+
+            printf("INPUT: ");
+
+            scanf("%d", &valor);
+
+            p->acc = valor;
+
+            int bloqueio = (rand() % 3) + 1;
+
+            p->bloqueado_ate = tempo_global + bloqueio;
+
+            p->estado = BLOCKED;
+
+            printf(
+                "Processo bloqueado por %d tempos.\n",
+                bloqueio
+            );
+        }
+
         p->pc++;
     }
 }

@@ -1,0 +1,309 @@
+# Simulador de Processos com Escalonamento EDF
+
+## Descrição do Projeto
+
+Este projeto consiste na implementação de um simulador de sistema operacional utilizando o algoritmo de escalonamento EDF (Earliest Deadline First). O simulador executa programas escritos em uma linguagem Assembly simplificada, simulando o funcionamento de uma CPU, gerenciamento de processos, deadlines, bloqueios, preempção e tarefas periódicas.
+
+O objetivo principal do trabalho é demonstrar conceitos fundamentais de Sistemas Operacionais, incluindo:
+
+* Escalonamento EDF;
+* Troca de contexto;
+* Processos periódicos;
+* Bloqueio e desbloqueio de processos;
+* Deadline miss;
+* Gerenciamento de estados;
+* Simulação de CPU;
+* Execução de instruções Assembly.
+
+---
+
+# Funcionalidades Implementadas
+
+## CPU Virtual
+
+O simulador implementa uma CPU simplificada contendo:
+
+* ACC (Acumulador);
+* PC (Program Counter);
+* Memória de variáveis;
+* Execução sequencial de instruções.
+
+---
+
+## Linguagem Assembly
+
+O simulador interpreta programas Assembly contendo:
+
+### Instruções aritméticas
+
+* LOAD
+* STORE
+* ADD
+* SUB
+* MULT
+* DIV
+
+### Instruções de desvio
+
+* BRANY
+* BRPOS
+* BRZERO
+* BRNEG
+
+### Syscalls
+
+* SYSCALL 0 → encerramento do processo
+* SYSCALL 1 → impressão de valor
+* SYSCALL 2 → leitura de valor
+
+---
+
+# Escalonamento EDF
+
+O algoritmo EDF (Earliest Deadline First) seleciona sempre o processo READY com o menor deadline absoluto.
+
+Características implementadas:
+
+* Prioridade dinâmica;
+* Múltiplos processos;
+* Arrival time;
+* Tarefas periódicas;
+* Deadline miss;
+* Preempção;
+* CPU ociosa.
+
+---
+
+# Estados dos Processos
+
+Os processos podem assumir os seguintes estados:
+
+| Estado   | Descrição                            |
+| -------- | ------------------------------------ |
+| NEW      | Processo ainda não chegou ao sistema |
+| READY    | Processo pronto para executar        |
+| RUNNING  | Processo executando na CPU           |
+| BLOCKED  | Processo aguardando syscall          |
+| FINISHED | Processo encerrado                   |
+
+---
+
+# Estrutura do Projeto
+
+```
+.
+├── main.c
+├── cpu.c
+├── cpu.h
+├── parser.c
+├── parser.h
+├── scheduler.c
+├── scheduler.h
+├── processo.h
+└── programas/
+    ├── p1.asm
+    └── p2.asm
+```
+
+---
+
+# Explicação dos Arquivos
+
+## main.c
+
+Responsável pelo funcionamento principal do simulador:
+
+* Clock global;
+* Atualização dos estados;
+* Arrival time;
+* Deadline miss;
+* Periodicidade;
+* Troca de contexto;
+* Loop principal de execução.
+
+---
+
+## cpu.c
+
+Implementa a CPU virtual:
+
+* Execução das instruções;
+* Manipulação do ACC;
+* Syscalls;
+* Operações aritméticas;
+* Saltos condicionais.
+
+---
+
+## parser.c
+
+Responsável pela leitura dos arquivos `.asm`:
+
+* Parsing das instruções;
+* Parsing das variáveis;
+* Labels;
+* Seções `.code` e `.data`.
+
+---
+
+## scheduler.c
+
+Implementa o algoritmo EDF:
+
+* Seleção do processo READY com menor deadline.
+
+---
+
+# Como Compilar
+
+No terminal MSYS2:
+
+```bash
+gcc main.c parser.c cpu.c scheduler.c -o simulador
+```
+
+---
+
+# Como Executar
+
+```bash
+./simulador
+```
+
+---
+
+# Exemplo de Programa Assembly
+
+## p1.asm
+
+```asm
+.code
+LOAD valor
+loop: SUB #1
+SYSCALL 1
+BRPOS loop
+SYSCALL 0
+.endcode
+
+.data
+valor 3
+.enddata
+```
+
+---
+
+## p2.asm
+
+```asm
+.code
+LOAD numero
+ADD #5
+SYSCALL 1
+SYSCALL 0
+.endcode
+
+.data
+numero 10
+.enddata
+```
+
+---
+
+# Exemplo de Saída
+
+```text
+Processo P1 chegou no sistema.
+
+ESTADOS:
+P1 -> READY
+P2 -> NEW
+
+========================
+TEMPO: 0
+PROCESSO: P1
+DEADLINE: 10
+========================
+Executando: LOAD valor
+ACC = 3
+```
+
+---
+
+# Funcionamento Geral
+
+O simulador executa uma instrução por unidade de tempo.
+
+A cada ciclo:
+
+1. Atualiza chegadas de processos;
+2. Atualiza desbloqueios;
+3. Verifica deadline miss;
+4. Atualiza tarefas periódicas;
+5. Escolhe processo via EDF;
+6. Executa uma instrução;
+7. Atualiza estados.
+
+---
+
+# Deadline Miss
+
+Quando um processo ultrapassa seu deadline sem finalizar sua execução, o simulador detecta automaticamente:
+
+```text
+[DEADLINE MISS] Processo P1 perdeu o deadline.
+```
+
+---
+
+# Processos Periódicos
+
+Os processos podem reiniciar automaticamente após o período definido (`Pi`).
+
+Exemplo:
+
+```text
+[TAREFA PERIODICA] P2 reiniciada.
+```
+
+---
+
+# Bloqueios
+
+As syscalls podem bloquear processos por um intervalo aleatório de tempo.
+
+Durante o bloqueio:
+
+* o processo entra em BLOCKED;
+* outro processo pode assumir a CPU;
+* o EDF continua funcionando normalmente.
+
+---
+
+# Conceitos de Sistemas Operacionais Demonstrados
+
+O projeto demonstra diversos conceitos importantes de Sistemas Operacionais:
+
+* Escalonamento EDF;
+* Escalonamento em tempo real;
+* Troca de contexto;
+* Processos periódicos;
+* Estados de processos;
+* Simulação de CPU;
+* Interrupções;
+* Deadline miss;
+* Processos concorrentes;
+* Gerenciamento de tempo.
+
+---
+
+# Integrantes
+
+Adicionar nomes dos integrantes aqui.
+
+---
+
+# Observações
+
+Este simulador possui fins acadêmicos e foi desenvolvido para demonstrar conceitos de Sistemas Operacionais em um ambiente simplificado.
+
+Apesar de simplificado, o projeto implementa funcionalidades presentes em sistemas reais de escalonamento em tempo real.
